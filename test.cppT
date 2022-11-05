@@ -1,0 +1,205 @@
+#include <iostream>
+#include <cassert>
+#include "UI.h"
+
+//Repository tests
+void test_add_manager(){
+    shared_ptr<Repository::CrudRepository> repo = make_shared<Repository::ElectricInMemoRepo>();
+    shared_ptr<Controller::ElectricController> ctrl = make_shared<Controller::ElectricController>(repo);
+    ctrl->add_car_manager("Dacia", "Logan", 1980, 20, 10, 10);
+    assert(repo->get_cars()[0].getBrand() == "Dacia");
+    assert(repo->get_cars()[0].getModel() == "Logan");
+    assert(repo->get_cars()[0].getYearOfRegistration() == 1980);
+
+    try {
+        ctrl->add_car_manager("Dacia", "Logan", 1890, 20, 10, 10);
+        assert(false);
+    }
+    catch (exception &) {
+        assert(true);
+    }
+}
+
+void test_remove_manager(){
+    shared_ptr<Repository::CrudRepository> repo = make_shared<Repository::ElectricInMemoRepo>();
+    shared_ptr<Controller::ElectricController> ctrl = make_shared<Controller::ElectricController>(repo);
+    ctrl->add_car_manager("Ford", "Focus", 2002, 1230, 20, 1000);
+    ctrl->add_car_manager("Dacia", "Logan", 1980, 20, 10, 10);
+
+    ctrl->delete_car_manager(1);
+    assert(repo->get_cars().size() == 1);
+    assert(repo->get_cars()[0].getBrand() == "Dacia");
+    assert(repo->get_cars()[0].getModel() == "Logan");
+    assert(repo->get_cars()[0].getYearOfRegistration() == 1980);
+
+    try {
+        ctrl->delete_car_manager(7);
+        assert(false);
+    }
+    catch (exception &) {
+        assert(true);
+    }
+}
+
+void test_modify_manager(){
+    shared_ptr<Repository::CrudRepository> repo = make_shared<Repository::ElectricInMemoRepo>();
+    shared_ptr<Controller::ElectricController> ctrl = make_shared<Controller::ElectricController>(repo);
+    ctrl->add_car_manager("Ford", "Focus", 2002, 1230, 20, 1000);
+
+    ctrl->modify_car_manager(3, 100, 1230, 20, 1100);
+    assert(repo->get_cars()[0].getKilometer() == 100);
+    assert(repo->get_cars()[0].getRange() == 1100);
+
+    try {
+        ctrl->modify_car_manager(99, 100, 1230, 20, 1100);
+        assert(false);
+    }
+    catch (exception &) {
+        assert(true);
+    }
+}
+
+void test_add_kunde(){
+    shared_ptr<Repository::CrudRepository> repo = make_shared<Repository::ElectricInMemoRepo>();
+    shared_ptr<Controller::ElectricController> ctrl = make_shared<Controller::ElectricController>(repo);
+    ctrl->add_car_manager("Dacia", "Logan", 1980, 20, 10, 10);
+    ctrl->add_car_client(4,"Mihai");
+    assert(repo->get_fav_cars()[0].getBrand() == "Dacia");
+    assert(repo->get_fav_cars()[0].getModel() == "Logan");
+    assert(repo->get_fav_cars()[0].getYearOfRegistration() == 1980);
+
+    try {
+        ctrl->add_car_client(110, "Mihai");
+        assert(false);
+    }
+    catch (exception &) {
+        assert(true);
+    }
+}
+
+void test_remove_kunde(){
+    shared_ptr<Repository::CrudRepository> repo = make_shared<Repository::ElectricInMemoRepo>();
+    shared_ptr<Controller::ElectricController> ctrl = make_shared<Controller::ElectricController>(repo);
+    ctrl->add_car_manager("Ford", "Focus", 2002, 1230, 20, 1000);
+    ctrl->add_car_manager("Dacia", "Logan", 1980, 20, 10, 10);
+    ctrl->add_car_client(6,"Mihai");
+    ctrl->add_car_client(7,"Mihai");
+
+    ctrl->delete_car_client(8,"Mihai");
+    assert(repo->get_fav_cars().size() == 1);
+    assert(repo->get_fav_cars()[0].getBrand() == "Dacia");
+    assert(repo->get_fav_cars()[0].getModel() == "Logan");
+    assert(repo->get_fav_cars()[0].getYearOfRegistration() == 1980);
+
+    try {
+        ctrl->delete_car_client(100,"Mihai");
+        assert(false);
+    }
+    catch (exception &) {
+        assert(true);
+    }
+}
+
+//Controller tests
+void test_filter_by_brand_model_ctrl(){
+    shared_ptr<Repository::CrudRepository> repo = make_shared<Repository::ElectricInMemoRepo>();
+    shared_ptr<Controller::ElectricController> ctrl = make_shared<Controller::ElectricController>(repo);
+
+    repo->add_car_manager("Ford", "Focus", 2002, 1230, 20, 1000);
+    repo->add_car_manager("Dacia", "Logan", 1980, 20, 10, 10);
+    repo->add_car_manager("Ford", "Fiesta", 1990, 300, 1000, 35);
+    repo->add_car_manager("Ford", "Focus", 2009, 1230, 20, 1000);
+
+    vector<Domain::Elektroauto> filter_cars_by_brand = {};
+    filter_cars_by_brand = ctrl->filter_brand_model(1, "Ford");
+    assert(filter_cars_by_brand[0].getBrand() == "Ford");
+    assert(filter_cars_by_brand[0].getModel() == "Focus");
+    assert(filter_cars_by_brand[1].getBrand() == "Ford");
+    assert(filter_cars_by_brand[1].getModel() == "Fiesta");
+
+    vector<Domain::Elektroauto> filter_cars_by_model = {};
+    filter_cars_by_model = ctrl->filter_brand_model(2, "Focus");
+    assert(filter_cars_by_model[0].getBrand() == "Ford");
+    assert(filter_cars_by_model[0].getModel() == "Focus");
+    assert(filter_cars_by_model[0].getYearOfRegistration() == 2002);
+    assert(filter_cars_by_model[1].getBrand() == "Ford");
+    assert(filter_cars_by_model[1].getModel() == "Focus");
+    assert(filter_cars_by_model[1].getYearOfRegistration() == 2009);
+}
+
+void test_filter_by_age_ctrl(){
+    shared_ptr<Repository::CrudRepository> repo = make_shared<Repository::ElectricInMemoRepo>();
+    shared_ptr<Controller::ElectricController> ctrl = make_shared<Controller::ElectricController>(repo);
+
+    repo->add_car_manager("Ford", "Focus", 2002, 1230, 20, 1000);
+    repo->add_car_manager("Dacia", "Logan", 2002, 20, 10, 10);
+    repo->add_car_manager("Ford", "Fiesta", 1990, 300, 1000, 35);
+    repo->add_car_manager("Ford", "Focus", 2001, 1230, 20, 1000);
+
+    vector<Domain::Elektroauto> filter_cars = {};
+    filter_cars = ctrl->filter_by_age(2002);
+    assert(filter_cars[0].getBrand() == "Ford");
+    assert(filter_cars[0].getModel() == "Focus");
+    assert(filter_cars[1].getBrand() == "Dacia");
+    assert(filter_cars[1].getModel() == "Logan");
+}
+
+void test_filter_by_km_ctrl(){
+    shared_ptr<Repository::CrudRepository> repo = make_shared<Repository::ElectricInMemoRepo>();
+    shared_ptr<Controller::ElectricController> ctrl = make_shared<Controller::ElectricController>(repo);
+
+    repo->add_car_manager("Ford", "Focus", 2002, 1230, 20, 1000);
+    repo->add_car_manager("Dacia", "Logan", 2000, 20, 10, 10);
+    repo->add_car_manager("Ford", "Fiesta", 1990, 300, 1000, 35);
+    repo->add_car_manager("Ford", "Focus", 2001, 1230, 20, 1000);
+
+    repo->modify_car_manager(18, 1001, 1230, 20, 1000);
+    repo->modify_car_manager(19, 1001, 20, 10, 10);
+
+    vector<Domain::Elektroauto> filter_cars = {};
+    filter_cars = ctrl->filter_by_kilometer(1001);
+
+    assert(filter_cars[0].getBrand() == "Ford");
+    assert(filter_cars[0].getModel() == "Focus");
+    assert(filter_cars[1].getBrand() == "Dacia");
+    assert(filter_cars[1].getModel() == "Logan");
+}
+
+void test_sort_by_price_ctrl(){
+    shared_ptr<Repository::CrudRepository> repo = make_shared<Repository::ElectricInMemoRepo>();
+    shared_ptr<Controller::ElectricController> ctrl = make_shared<Controller::ElectricController>(repo);
+
+    repo->add_car_manager("Ford", "Focus", 2002, 1230, 20, 1000);
+    repo->add_car_manager("Dacia", "Logan", 2000, 20, 10, 10);
+    repo->add_car_manager("Ford", "Fiesta", 1990, 300, 1000, 35);
+    repo->add_car_manager("Ford", "Focus", 2001, 1230, 20, 1000);
+
+    vector<Domain::Elektroauto> filter_cars = {};
+    filter_cars = ctrl->sort_by_price();
+
+    assert(filter_cars[0].getBrand() == "Dacia");
+    assert(filter_cars[0].getModel() == "Logan");
+    assert(filter_cars[1].getBrand() == "Ford");
+    assert(filter_cars[1].getModel() == "Fiesta");
+}
+
+namespace main_test {
+
+    int main() {
+        //testers for Repository
+        test_add_manager();
+        test_remove_manager();
+        test_modify_manager();
+        test_add_kunde();
+        test_remove_kunde();
+
+        //testers for Controller
+        test_filter_by_brand_model_ctrl();
+        test_filter_by_age_ctrl();
+        test_filter_by_km_ctrl();
+        test_sort_by_price_ctrl();
+        cout << "All tests passed.\n\n";
+
+        return 0;
+    }
+}
