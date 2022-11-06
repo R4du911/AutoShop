@@ -10,4 +10,4 @@ list of favourites. He can also filter the search in the car-repository by brand
 
 The application has an OOP structure using its 4 principles of encapsuling, abstraction, inheritance and polymorphism. Smart-pointers are also used in 
 the making of the app. The data is being saved locally through the InMemoryRepository or in a CSV file with the help of CSVRepository. Both Repositories have
-CRUD functionalities.
+CRUD functionalities..
